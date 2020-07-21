@@ -19,7 +19,7 @@ class Resultado():
         self._revocacao = None
 
     @property
-    def mat_confusao(self) -> np.ndarray:
+    def mat_confusao(self):
         """
         Retorna a matriz de confusão.
         O retorno np.ndarray é um array numpy, neste caso, a matriz de confusão
@@ -110,15 +110,16 @@ class Resultado():
         #Atividade 1: substitua o none...lembre-se que já foi calculado o
         #f1 por classe no atributo calculado correspondente.
         #Lembre-se de como usar atributos calculados.
-        return None
+        return np.average(self.f1_por_classe)
 
     @property
     def acuracia(self):
         #quantidade de elementos previstos corretamente
         num_previstos_corretamente = 0
-        for classe in range(len(self.mat_confusao)):
+        for classe in range(len(self.y)):
             #Atividade 1: complete o código abaixo, substituindo o None
-            num_previstos_corretamente += None
+            if(self.y[classe]==self.predict_y[classe]):
+                num_previstos_corretamente += 1
 
         return num_previstos_corretamente/len(self.y)
 class Fold():
@@ -145,19 +146,19 @@ class Fold():
         col_classe: coluna que representa a classe
         seed: seed para a amostra aleatória
         """
+
         #1. especifique o número de instancias por fold usando
         #...o parametro val_k
-        num_instances_per_partition = None
+        num_instances_per_partition = int(len(df_dados)/val_k)
         #folds de saida
         arr_folds = []
-
 
 
         for num_repeticao in range(num_repeticoes):
             #2. Embaralhe os dados: para isso, use o método sample para fazer uma amostra aleatória usando 100% dos dados. Use a seed passada como parametro
             #lembre-se que, para cada repetição, deve-se haver uma seed diferente
             #para isso, use seed+num_repeticao
-            df_dados_rand = None
+            df_dados_rand = df_dados.sample(n= len(df_dados), random_state=seed+num_repeticao)
 
             #Impressão dos ids dos dados (exiba o print para testes)
             #print("Dados: "+str(df.index.values))
@@ -166,42 +167,29 @@ class Fold():
             for num_fold in range(val_k):
                 #2. especifique o inicio e fim do fold de teste. Caso seja o ultimo, o fim será o tamanho do vetor.
                 #Use num_instances_per_partition e num_fold para deliminar o inicio e fim do teste
-                ini_fold_to_predict = None
+                ini_fold_to_predict = num_fold*num_instances_per_partition
                 if num_fold < val_k-1:
-                    fim_fold_to_predict = None
+                    fim_fold_to_predict = num_instances_per_partition*(num_fold+1)
                 else:
-                    fim_fold_to_predict = None
+                    fim_fold_to_predict = len(df_dados_rand)
 
-                #print(f"Inicio: {ini_fold_to_predict} -  Fim: {fim_fold_to_predict}")
                 #3. por meio do df_dados_rand, obtenha os dados de avaliação (teste ou validação)
-                df_to_predict = None
-                #print(df_to_predict)
+                df_to_predict = df_dados[ini_fold_to_predict:fim_fold_to_predict]
 
                 #4. Crie o treino por meio dos dados originais (df_dados_rand),
                 #removendo os dados que serão avaliados  (df_to_predict)
-                df_treino = None
-                #print(df_treino)
+                df_treino = df_dados.drop(df_to_predict.index)
 
                 #5. Crie o fold (objeto da classe Fold) para adicioná-lo no vetor
-                fold = None
+                fold = Fold(df_treino,df_to_predict,col_classe,num_folds_validacao,num_repeticoes_validacao)
                 arr_folds.append(fold)
 
 
 
         #imprime o número instancias por fold (descomente para testes)
-        """
-        for num_repeticao in range(num_repeticoes):
-            for num_fold in range(val_k):
-                i = val_k*num_repeticao+num_fold
-                df_treino  = arr_folds[i].df_treino
-                df_to_predict  = arr_folds[i].df_data_to_predict
-                qtd_treino = len(df_treino.index)
-                qtd_to_predict = len(df_to_predict.index)
-                print(f"Repeticao #{num_repeticao}  Fold #{num_fold} instancias no treino: {qtd_treino} teste: {qtd_to_predict}")
-                print(f"\tÍndices das instancias do treino: {df_treino.index.values}")
-                print(f"\tÍndices das instancias a avaliar (teste ou validação): {df_to_predict.index.values}")
-                print(" ")
-        """
+
+
+
         return arr_folds
 
     def __str__(self):
