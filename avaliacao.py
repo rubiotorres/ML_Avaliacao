@@ -49,28 +49,26 @@ class Experimento():
             ##1. Caso haja um metodo de otimizacao, obtenha o melhor metodo com ele
             #substitua os none quando necessario
             if(self.ClasseObjetivoOtimizacao is not None):
-                study = None
+                study = optuna.create_study(sampler=self.sampler, direction="maximize")
                 objetivo_otimizacao = self.ClasseObjetivoOtimizacao(fold)
-                study.optimize(None, None)
+                study.optimize(objetivo_otimizacao, n_trials=self.num_trials)
 
                 #1.(a) obtem o melhor metodo da otimizacao
-                best_method = None
+                best_method = objetivo_otimizacao.arr_evaluated_methods[study.best_trial.number].ml_method
                 self.studies_per_fold.append(study)
             else:
                 #caso contrario, o metodo, atributo da classe Experimento (sem modificações) é usado
                 best_method = self.ml_method
 
             ##2. adiciona em resultados o resultado predito usando o melhor metodo
-            resultado = None
+            resultado = ScikitLearnAprendizadoDeMaquina(best_method).eval(fold.df_treino,fold.df_data_to_predict,fold.col_classe)
             self._resultados.append(resultado)
         return self._resultados
 
     @property
     def macro_f1_avg(self) -> float:
-        """
-        Atividade 6: Calcula a média do f1 dos resultados.
-        """
-        return None
+        return sum(item.macro_f1 for item in self.calcula_resultados())/5
+
 
 
 
@@ -124,14 +122,14 @@ class OtimizacaoObjetivoRandomForest(OtimizacaoObjetivo):
         #Para passar nos testes, os parametros devem ter o seguintes nomes: "min_samples_split",
         #. "max_features" e "num_arvores". Não mude a ordem de atribuição
         #. abaixo
-        min_samples = None
-        max_features = None
-        num_arvores = None
+        min_samples = trial.suggest_uniform('min_samples_split', 0, 0.5)
+        max_features = trial.suggest_uniform('max_features', 0, 0.5)
+        num_arvores = trial.suggest_int('num_arvores', 1, self.num_arvores_max)
         #coloque, ao instanciar o RandomForestClassifier como random_state=2
-        clf_rf = None
+        clf_rf = RandomForestClassifier(min_samples_split=min_samples,max_features=max_features,n_estimators=num_arvores,random_state=2)
 
         return ScikitLearnAprendizadoDeMaquina(clf_rf)
 
     def resultado_metrica_otimizacao(self, resultado:Resultado) ->float:
         #Atividade 4: calcule o resultado por meio do macro_f1
-        return None
+        return resultado.macro_f1

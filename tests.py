@@ -55,6 +55,8 @@ class MetodoTest(unittest.TestCase):
         clf_dtree = DecisionTreeClassifier(random_state=1)
         metodo = ScikitLearnAprendizadoDeMaquina(clf_dtree)
         resultado = metodo.eval(Dados.df_treino,Dados.df_teste,"realClass")
+
+        self.assertListEqual(list(Dados.df_teste["realClass"]),list(resultado.y),"A lista de classe alvo da partição de teste não é a esperada")
         acuracia = resultado.acuracia
         macro_f1 = resultado.macro_f1
         print(f"Macro f1: {macro_f1} Acuracia: {acuracia}")
@@ -100,7 +102,7 @@ class TestFold(unittest.TestCase):
             tester.assertEqual(len(lstTeste),len(df_dados),"Algumas instancias não foram usadas no teste.")
 
     def test_gerar_k_folds(self):
-        k = 4
+        k = 7
         num_repeticoes = 3
 
         #print("DADOS: "+str(len(TestFold.df_dados)))
@@ -109,6 +111,12 @@ class TestFold(unittest.TestCase):
 
         #verifica se foram 4 folds e 3 repetições
         self.assertEqual(k*num_repeticoes,len(folds),"O número de folds criado não é quantidade solicitada")
+
+        #verifica se os dados estao embaralhados
+        arr_lista_fold0 = list(folds[0].df_data_to_predict.index.values)
+        self.assertTrue(arr_lista_fold0!=[0,1,2], "A lista não foi embaralhada!")
+        self.assertListEqual(arr_lista_fold0,[14, 13, 17], "A lista não foi embaralhada corretamente! Não esqueça de usar a seed=seed+num_repeticoes")
+        #verifica se os dados foram divididos corretamente
 
         #testa cada repetição separadamente
         for repeticao_i in range(num_repeticoes):
@@ -163,8 +171,8 @@ class ExperimentoTest(unittest.TestCase):
 
         exp = self.get_experimento()
 
-        print("Macro F1 médio:"+str(exp.macro_f1_avg))
-        self.assertAlmostEqual(exp.macro_f1_avg,0.3136507936507936,msg="Valor inesperado de Macro F1")
+        #print("Macro F1 médio:"+str(exp.macro_f1_avg))
+        self.assertAlmostEqual(exp.macro_f1_avg, 0.39380952380952383, msg="Valor inesperado de Macro F1")
 
 
     def test_resultados(self):
@@ -172,11 +180,12 @@ class ExperimentoTest(unittest.TestCase):
         exp = self.get_experimento()
         fold = exp.folds[0]
 
-        arrExpMacroF1 =[0.3333333333333333,0.35555555555555557,
-                        0.38888888888888884,0.3,0.1904761904761905]
+        arrExpMacroF1 =[0.16666666666666666,0.4444444444444444,
+                        0.48888888888888893,0.6190476190476191, 0.24999999999999997]
         exp.calcula_resultados()
 
         for i,macro_f1 in enumerate(arrExpMacroF1):
+            self.assertTrue(type(exp.resultados[i]) == Resultado, "O método calcula_resultados deve retornar uma lista de objetos da classe Resultado e não float.")
             print(f"Fold: {i} Macro F1: {exp.resultados[i].macro_f1}")
             #verifica se o melhor metodo foi usado
 

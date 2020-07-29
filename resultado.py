@@ -174,11 +174,11 @@ class Fold():
                     fim_fold_to_predict = len(df_dados_rand)
 
                 #3. por meio do df_dados_rand, obtenha os dados de avaliação (teste ou validação)
-                df_to_predict = df_dados[ini_fold_to_predict:fim_fold_to_predict]
+                df_to_predict = df_dados_rand[ini_fold_to_predict:fim_fold_to_predict]
 
                 #4. Crie o treino por meio dos dados originais (df_dados_rand),
                 #removendo os dados que serão avaliados  (df_to_predict)
-                df_treino = df_dados.drop(df_to_predict.index)
+                df_treino = df_dados_rand.drop(df_to_predict.index)
 
                 #5. Crie o fold (objeto da classe Fold) para adicioná-lo no vetor
                 fold = Fold(df_treino,df_to_predict,col_classe,num_folds_validacao,num_repeticoes_validacao)
